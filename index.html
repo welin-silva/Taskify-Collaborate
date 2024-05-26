@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taskify Collaborate</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <div v-if="!loggedIn">
+            <h1>Login</h1>
+            <input type="text" v-model="username" placeholder="Username">
+            <input type="password" v-model="password" placeholder="Password">
+            <button @click="login">Login</button>
+            <p v-if="loginError" class="error">{{ loginError }}</p>
+        </div>
+        <div v-else class="main-container">
+            <div class="left-panel">
+                <div class="task-creation-panel" v-if="!currentProject">
+                    <h1>Taskify Collaborate</h1>
+                    <input type="text" v-model="newProjectName" placeholder="Enter project name">
+                    <input type="datetime-local" v-model="newProjectDueDate" placeholder="Enter due date">
+                    <button @click="createProject">Add Project</button>
+                </div>
+                <div class="task-addition-panel" v-if="currentProject">
+                    <h3>{{ currentProject.name }} - Due: {{ currentProject.formatDueDate() }}</h3>
+                    <input type="text" v-model="newTaskName" :value="newTaskName" placeholder="Enter task name">
+                    <button @click="addTask">Add Task</button>
+                    <button @click="confirmProject">Confirm Project</button>
+                </div>
+            </div>
+            <div class="right-panel">
+                <h2>Active Projects</h2>
+                <div class="project-status-summary">
+                    <h3>Project Status Summary</h3>
+                    <ul>
+                        <li>Completed: {{ projectStatusCounts.completed }}</li>
+                        <li>Overdue: {{ projectStatusCounts.overdue }}</li>
+                        <li>Due Soon: {{ projectStatusCounts.dueSoon }}</li>
+                        <li>On Track: {{ projectStatusCounts.onTrack }}</li>
+                    </ul>
+                </div>
+                <ul>
+                    <li v-for="(project, index) in sortedProjects" :key="index"> <!-- -->
+                        <div :class="['project-card', projectStatus(project), {'completed': project.completed}]">
+                            <div class="project-header">
+                                <input v-if="index === editingProjectIndex" type="text" v-model="tempProject.name">
+                                <input v-if="index === editingProjectIndex" type="datetime-local" v-model="tempProject.dueDate">
+                                <span v-else>{{ project.name }} - Due: {{ formatDueDate(project.dueDate) }}</span>
+                            </div>
+                            <div class="project-actions">
+                                <button @click="toggleProjectCompletion(index)">{{ project.completed ? 'Unmark Completed' : 'Mark Completed' }}</button>
+                                <button v-if="index === editingProjectIndex" @click="saveChanges(index)">Save Changes</button>
+                                <button v-if="index === editingProjectIndex" @click="deleteProject(index)">Delete Project</button>
+                                <button v-if="index !== editingProjectIndex && project.confirmed" @click="editProject(index)">Edit Project</button>
+                            </div>
+                            <ul>
+                                <li v-for="(task, idx) in project.tasks" :key="idx" :class="{'completed': task.completed}">
+                                    <div class="task-item">
+                                        <input v-if="index === editingProjectIndex && idx === editingTaskIndex" type="text" v-model="tempProject.tasks[idx].description">
+                                        <span v-else>{{ task.description }}</span>
+                                    </div>
+                                    <div class="task-actions">
+                                        <span class="status-light" :class="projectStatus(project)"></span>
+                                        <button @click="toggleTaskCompletion(index, idx)">{{ task.completed ? 'Unmark Completed' : 'Mark Completed' }}</button>
+                                        <button v-if="index === editingProjectIndex && idx === editingTaskIndex" @click="saveTaskChanges(index, idx)">Save Task</button>
+                                        <button v-if="index === editingProjectIndex" @click="editTask(index, idx)">Edit Task</button>
+                                        <button v-if="index === editingProjectIndex" @click="deleteTask(index, idx)">Delete Task</button>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <!-- Import Vue -->
+    <script src="https://unpkg.com/vue@2.6.12"></script>
+    <!-- Import custom Vue component -->
+    <script src="vue-components.js" type="module"></script>
+</body>
+</html>
